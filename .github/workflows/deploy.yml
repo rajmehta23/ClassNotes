@@ -1,0 +1,32 @@
+name: CI Build & Lint Checks
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    name: Build & Lint Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Project Dependencies
+        run: npm ci
+
+      - name: Verify Code Styling Rules
+        run: npm run lint
+        continue-on-error: true # Allow building even if styling warnings exist
+
+      - name: Verify Typescript Production Build
+        run: npm run build

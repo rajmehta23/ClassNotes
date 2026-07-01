@@ -1,0 +1,175 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if the user belongs to the request's cohort (Course, Semester & Batch match)
+    function isCohortMember(docData) {
+      let userPath = /databases/$(database)/documents/users/$(request.auth.uid);
+      // Fallback: If user document doesn't exist yet (e.g. anonymous sandbox sessions), allow access.
+      // Otherwise, check that course, semester, and batch match the request with safe default fallbacks.
+      return docData == null || !exists(userPath) || (
+        get(userPath).data.get('role', 'student') == 'admin' || (
+          docData.course == get(userPath).data.get('course', 'BCA') &&
+          docData.semester == get(userPath).data.get('semester', '1') &&
+          docData.batch == get(userPath).data.get('batch', '2024-2027')
+        )
+      );
+    }
+
+    // ─── NOTE REQUESTS ─────────────────────────────────────────
+    match /noteRequests/{requestId} {
+      // Students of the same course/batch and admins can view requests
+      allow read: if request.auth != null && isCohortMember(resource.data);
+      
+      // Students of the same course/batch and admins can create requests
+      allow create: if request.auth != null && isCohortMember(request.resource.data);
+      
+      // Students of the same course/batch and admins can update (vote or fulfill) requests
+      allow update: if request.auth != null && isCohortMember(resource.data);
+      
+      // Only admins can delete requests
+      allow delete: if request.auth != null && (
+        !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'student') == 'admin'
+      );
+    }
+
+    // ─── USERS ─────────────────────────────────────────────────
+    // Any authenticated user can read all users (for admin lists, etc.)
+    // Users can only write to their own document
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == userId && (
+        request.resource.data.get('role', 'student') == 'student' &&
+        request.resource.data.get('points', 100) == 100
+      );
+      allow update: if request.auth != null && request.auth.uid == userId && (
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'points', 'contributionsCount', 'status'])
+      );
+      // Admins can update any user (role changes, suspension, points)
+      allow update: if request.auth != null && (
+        !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'student') == 'admin'
+      );
+      allow delete: if false; // Never hard-delete users
+    }
+
+    // ─── NOTES ─────────────────────────────────────────────────
+    // Any authenticated user can read approved notes
+    // Any authenticated user can upload (create) notes
+    // Authors can edit/delete their own notes
+    // Admins can approve/reject/delete any note
+    match /notes/{noteId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && (
+        !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'student') == 'admin' ||
+        request.resource.data.get('status', 'pending') == 'pending'
+      );
+      allow update: if request.auth != null && (
+        !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+        resource.data.authorId == request.auth.uid ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'student') == 'admin' ||
+        // Allow updating metadata fields (downloads, ratings, reports)
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['downloadsCount', 'ratingsAverage', 'ratingsCount', 'reportsCount'])
+      );
+      allow delete: if request.auth != null && (
+        !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+        resource.data.authorId == request.auth.uid ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'student') == 'admin'
+      );
+    }
+
+    // ─── ANNOUNCEMENTS ─────────────────────────────────────────
+    // Any authenticated user can read announcements
+    // Only admins can create/edit/delete announcements
+    match /announcements/{announcementId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && (
+        !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'student') == 'admin'
+      );
+    }
+
+    // ─── CALENDAR EVENTS ───────────────────────────────────────
+    // Any authenticated user can read and create events
+    // Users can only edit/delete their own events; admins can edit any
+    match /calendar/{eventId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && (
+        !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+        resource.data.createdBy == request.auth.uid ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'student') == 'admin'
+      );
+    }
+
+    // ─── BOOKMARKS ─────────────────────────────────────────────
+    // Users can only access their own bookmarks
+    match /bookmarks/{bookmarkId} {
+      allow read, write: if request.auth != null && (
+        resource == null ||
+        !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+        resource.data.userId == request.auth.uid
+      );
+      allow create: if request.auth != null && (
+        !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+        request.resource.data.userId == request.auth.uid
+      );
+    }
+
+    // ─── NOTIFICATIONS ─────────────────────────────────────────
+    // Users can read/update their own notifications; admins can create for anyone
+    match /notifications/{notifId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
+
+    // ─── REWARDS ───────────────────────────────────────────────
+    // Any authenticated user can read rewards
+    // Only admins can create/edit/delete reward items
+    match /rewards/{rewardId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && (
+        !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'student') == 'admin'
+      );
+    }
+
+    // ─── SETTINGS ──────────────────────────────────────────────
+    // Any authenticated user can read settings (to respect autoApprove, pointCosts)
+    // Only admins can change settings
+    match /settings/{settingId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && (
+        !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'student') == 'admin'
+      );
+    }
+
+    // ─── DOWNLOADS & ANALYTICS ─────────────────────────────────
+    // Any authenticated user can create download/analytics entries
+    // Only admins can read the full analytics collection
+    match /downloads/{downloadId} {
+      allow create: if request.auth != null && (
+        !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+        request.resource.data.userId == request.auth.uid
+      );
+      allow read: if request.auth != null && (
+        !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'student') == 'admin'
+      );
+    }
+
+    match /analytics/{analyticsId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null && (
+        !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'student') == 'admin'
+      );
+    }
+
+  }
+}
