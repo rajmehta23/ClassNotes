@@ -1,98 +1,135 @@
 # ClassNotes
 
-ClassNotes is a production-ready, cohort-based study material sharing platform for students. It features user authentication, a peer rewards point system, notes upload verification queues, and class notice tracking.
+ClassNotes is a collaborative academic platform that enables students to upload, discover, organize, and share study materials within their own course and batch. The platform is designed to make learning more accessible by combining note sharing, community collaboration, and an intuitive user experience.
+
+---
 
 ## Features
 
-- **Cohort Filtering**: Automatically filters notes, requests, and calendars based on the student's Course, Semester, and Batch.
-- **Notes Approval Queue**: Uploaded notes enter a pending state and are only published after admin validation. Uploaders earn points upon admin approval.
-- **Optional Learning Resources**: Notes can include reference links (such as YouTube videos, Wikipedia, or educational websites) styled with site-specific icons and animated links.
-- **Note Requests**: Students can post requests for study guides or cheatsheets, vote on requests ("I Need This Too"), and fulfill them directly via note uploads.
-- **Rewards System**: Earn coins by uploading helpful notes and redeem them to download notes or download premium study cheat sheets.
-- **Calendar & Notices**: Track class timetables, event schedules, and official cohort notices in real-time.
+### Secure Authentication
 
-## Tech Stack
+* Email & Password Sign-In
+* Google Sign-In
+* Secure user authentication
+* Persistent login sessions
 
-- **Frontend**: React 19, TypeScript, Vite, TailwindCSS 4, Framer Motion
-- **State Management**: Zustand
-- **Query Caching**: TanStack React Query
-- **Database & Auth**: Firebase (Authentication & Cloud Firestore)
-- **Asset Storage**: Cloudinary (Image & PDF uploads)
-- **Hosting**: Designed for Vercel
+### Notes Management
 
-## Folder Structure
+* Upload academic notes and study materials
+* Download shared notes
+* Preview documents before downloading
+* Search notes instantly
+* Filter notes by subject and category
+* Sort notes for quick access
+* View detailed note metadata
 
-```text
-├── .github/                # GitHub CI/CD workflows
-├── src/
-│   ├── app/                # Router configurations
-│   ├── components/         # Shared UI Components (Modals, ProtectedRoute)
-│   ├── features/           # Zustand state store hooks (Auth, Notes, Rewards)
-│   ├── firebase/           # Firebase initialization client SDK config
-│   ├── hooks/              # Custom React Hooks
-│   ├── layouts/            # Layout shells (RootLayout)
-│   ├── pages/              # Application Pages (Dashboard, Notes, Admin)
-│   ├── services/           # Data services (Notes, Rewards, Bookmarks)
-│   ├── types/              # TypeScript types and Zod database schemas
-│   └── utils/              # Utility helper scripts
-├── firestore.rules         # Security Rules for Firestore Database
-├── vercel.json             # Vercel deployment redirection configurations
-└── package.json            # Scripts and dependencies definitions
-```
+  * File Size
+  * Download Count
+  * Upload Date
+  * Verification Status
 
-## Installation
+### Community Note Requests
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/rajmehta23/ClassNotes.git
-   cd ClassNotes
-   ```
+* Request notes that are unavailable
+* View requests from students in the same course and batch
+* Mark **"I Need This Too"** on requests
+* Upload notes directly to fulfill requests
+* Automatic request status updates after fulfillment
 
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+### Admin Verification
 
-3. **Configure Environment Variables**:
-   Create a `.env` file in the root directory and specify the keys (refer to `.env.example`):
-   ```ini
-   VITE_FIREBASE_API_KEY=your_firebase_api_key
-   VITE_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
-   VITE_FIREBASE_PROJECT_ID=your_firebase_project_id
-   VITE_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
-   VITE_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
-   VITE_FIREBASE_APP_ID=your_firebase_app_id
-   VITE_CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
-   VITE_CLOUDINARY_UPLOAD_PRESET=your_cloudinary_upload_preset
-   ```
+* Uploaded notes remain **Pending** until reviewed
+* Admin approval system
+* Verified notes receive approval status
+* Rewards are granted only after approval
+* Rejected notes can be improved and resubmitted
 
-## Running Locally
+### Bookmarks
 
-To start the development server:
-```bash
-npm run dev
-```
+* Save important notes
+* Access bookmarked notes anytime
+* Dedicated Saved Notes section
+* Real-time bookmark count
 
-To run a production preview locally:
-```bash
-npm run build
-npm run preview
-```
+### Learning Resources
 
-## Deployment
+* Optional learning resource link with every note
+* Supports YouTube and educational websites
+* One-click access to related learning materials
 
-### Deploying to Vercel
-1. Import the repository into your Vercel Dashboard.
-2. In the project settings, add the environment variables defined above.
-3. Deploy! Vercel will automatically read `vercel.json` for SPA routing configuration.
+### Dashboard
 
-## Screenshots
+* Personalized welcome section
+* Quick statistics
+* Recent uploads
+* Bookmark summary
+* Rewards overview
+* Community request overview
 
-*(Screenshots placeholders)*
-- **Dashboard Overview**: `[Insert Dashboard Screenshot Here]`
-- **Lecture Notes Grid**: `[Insert Notes Screenshot Here]`
-- **Cohort requests**: `[Insert Requests Screenshot Here]`
+### Notice Board
 
-## License
+* Important announcements
+* Academic updates
+* Department notices
+* System notifications
 
-This project is licensed under the MIT License.
+### Academic Calendar
+
+* Academic events
+* Examination schedules
+* Important dates
+* Upcoming activities
+
+### Rewards & Achievements
+
+* Earn coins for approved contributions
+* Achievement badges
+* Contribution tracking
+* Reward history
+
+### User Profiles
+
+* Google profile image support
+* Custom profile picture upload
+* Editable profile information
+* Contribution statistics
+
+### Search & Discovery
+
+* Fast note search
+* Subject-based filtering
+* Smart sorting
+* Easy navigation
+
+### Real-Time Updates
+
+* Live data synchronization
+* Instant updates
+* Dynamic dashboard statistics
+
+### Responsive Design
+
+* Optimized for desktop
+* Tablet-friendly interface
+* Mobile-responsive layout
+
+### Security
+
+* Role-based access control
+* Secure authentication
+* Protected admin features
+* File validation
+* Input validation
+
+### Performance
+
+* Fast page loading
+* Optimized document management
+* Smooth animations
+* Efficient data fetching
+
+---
+
+## Built for Students
+
+ClassNotes is designed to simplify the process of sharing knowledge, discovering study resources, and collaborating with classmates through a secure and modern academic platform.
