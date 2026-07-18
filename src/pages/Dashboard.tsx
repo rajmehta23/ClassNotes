@@ -19,6 +19,7 @@ import {
 
 import { useDocumentMetadata } from '@/hooks/useDocumentMetadata';
 import { SetupProfileModal } from '@/components/SetupProfileModal';
+import { AttendanceWidget } from '@/modules/attendance/AttendanceWidget';
 
 export const Dashboard: React.FC = () => {
   useDocumentMetadata('Student Dashboard', 'Access your ClassNotes overview, view stats, announcements, recent activity, and calendar updates.');
@@ -408,7 +409,7 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* Statistics Cards Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
         {/* Card 1: Total Notes */}
         <motion.div 
           initial={{ opacity: 0, y: 15 }}
@@ -455,6 +456,9 @@ export const Dashboard: React.FC = () => {
           </div>
           <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-accent/5 rounded-full blur-2xl group-hover:bg-accent/10 transition-colors" />
         </motion.div>
+
+        {/* Card 3: Attendance Summary Widget */}
+        <AttendanceWidget />
 
         {/* Card 3: Points Balance */}
         <motion.div 

@@ -1,0 +1,13 @@
+export { AttendanceModule } from './AttendanceModule';
+export type { AttendanceModuleProps } from './AttendanceModule';
+export { AttendanceWidget } from './AttendanceWidget';
+export { AttendanceHomePage } from './pages/AttendanceHomePage';
+export { AttendanceHistoryPage } from './pages/AttendanceHistoryPage';
+export { AttendanceStatsPage } from './pages/AttendanceStatsPage';
+export { AttendanceSettingsPage } from './pages/AttendanceSettingsPage';
+export { useAttendanceStore } from './stores/useAttendanceStore';
+export * from './hooks';
+export * from './calculations';
+export * from './types';
+export * from './services/firebase/firebaseConfig';
+export * from './services/firebase/firestoreAttendanceService';

@@ -11,6 +11,7 @@ const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
 const Notes = lazy(() => import('@/pages/Notes'));
+const AttendanceModule = lazy(() => import('@/modules/attendance/AttendanceModule'));
 const Calendar = lazy(() => import('@/pages/Calendar'));
 const Announcements = lazy(() => import('@/pages/Announcements'));
 const Rewards = lazy(() => import('@/pages/Rewards'));
@@ -53,6 +54,10 @@ export const router = createBrowserRouter([
       {
         path: 'notes',
         element: <Notes />,
+      },
+      {
+        path: 'attendance',
+        element: <AttendanceModule />,
       },
       {
         path: 'requests',
