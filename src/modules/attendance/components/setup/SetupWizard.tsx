@@ -20,14 +20,25 @@ interface SubjectInput {
   color: string;
 }
 
+const CS_PLACEHOLDERS = [
+  'e.g. Data Structures & Algorithms',
+  'e.g. Operating Systems',
+  'e.g. Computer Networks',
+  'e.g. Database Management Systems',
+  'e.g. Object-Oriented Programming',
+  'e.g. Software Engineering',
+  'e.g. Theory of Computation',
+  'e.g. Compiler Design',
+];
+
 export const SetupWizard: React.FC = () => {
   const saveSetupSubjects = useAttendanceStore((s) => s.saveSetupSubjects);
   const targetPercentage = useAttendanceStore((s) => s.settings.targetPercentage);
 
   const [subjects, setSubjects] = useState<SubjectInput[]>([
-    { id: '1', name: 'Mathematics', held: '20', attended: '17', color: SUBJECT_COLOR_PALETTE[0].hex },
-    { id: '2', name: 'Physics', held: '18', attended: '14', color: SUBJECT_COLOR_PALETTE[1].hex },
-    { id: '3', name: 'Computer Science', held: '22', attended: '20', color: SUBJECT_COLOR_PALETTE[2].hex },
+    { id: '1', name: '', held: '', attended: '', color: SUBJECT_COLOR_PALETTE[0].hex },
+    { id: '2', name: '', held: '', attended: '', color: SUBJECT_COLOR_PALETTE[1].hex },
+    { id: '3', name: '', held: '', attended: '', color: SUBJECT_COLOR_PALETTE[2].hex },
   ]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,7 +49,7 @@ export const SetupWizard: React.FC = () => {
     const color = SUBJECT_COLOR_PALETTE[nextIdx % SUBJECT_COLOR_PALETTE.length].hex;
     setSubjects((prev) => [
       ...prev,
-      { id: Date.now().toString(), name: '', held: '0', attended: '0', color },
+      { id: Date.now().toString(), name: '', held: '', attended: '', color },
     ]);
   };
 
@@ -152,7 +163,7 @@ export const SetupWizard: React.FC = () => {
                     />
                     <input
                       type="text"
-                      placeholder={`Subject ${idx + 1} Name`}
+                      placeholder={CS_PLACEHOLDERS[idx % CS_PLACEHOLDERS.length]}
                       value={sub.name}
                       onChange={(e) => handleSubjectChange(sub.id, 'name', e.target.value)}
                       className="w-full px-3 py-1.5 rounded-xl border border-border bg-surface text-sm font-semibold text-primary focus:outline-none focus:border-accent"
@@ -180,6 +191,7 @@ export const SetupWizard: React.FC = () => {
                     <input
                       type="number"
                       min="0"
+                      placeholder="0"
                       value={sub.held}
                       onChange={(e) => handleSubjectChange(sub.id, 'held', e.target.value)}
                       className="w-full px-3 py-1.5 rounded-xl border border-border bg-surface text-sm text-primary font-bold focus:outline-none focus:border-accent"
@@ -193,6 +205,7 @@ export const SetupWizard: React.FC = () => {
                     <input
                       type="number"
                       min="0"
+                      placeholder="0"
                       value={sub.attended}
                       onChange={(e) => handleSubjectChange(sub.id, 'attended', e.target.value)}
                       className="w-full px-3 py-1.5 rounded-xl border border-border bg-surface text-sm text-primary font-bold focus:outline-none focus:border-accent"
