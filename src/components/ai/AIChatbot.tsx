@@ -1,9 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAIStore } from '@/features/ai/useAIStore';
 import { geminiService } from '@/services/ai/gemini';
+import { FEATURE_FLAGS } from '@/modules/config/featureFlags';
+import { useChatbot } from '@/modules/chatbot/hooks/useChatbot';
 import { 
   Bot, Send, X, Trash2, Sparkles, FileText, HelpCircle, 
-  MessageSquareText, BookOpen, Loader2, Copy, Check, CheckCircle2, XCircle, AlertCircle 
+  MessageSquareText, BookOpen, Loader2, Copy, Check, CheckCircle2, XCircle, AlertCircle,
+  Square, RotateCcw, RefreshCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -20,6 +23,10 @@ export const AIChatbot: React.FC = () => {
   const pendingAction = useAIStore((s) => s.pendingAction);
   const clearPendingAction = useAIStore((s) => s.clearPendingAction);
 
+  // Modular chatbot hook (used when CHATBOT_AI flag is enabled)
+  const chatbot = useChatbot();
+  const streamingText = useAIStore((s) => s.streamingText);
+
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [selectedQuizAnswers, setSelectedQuizAnswers] = useState<Record<string, Record<number, number>>>({});
@@ -32,7 +39,7 @@ export const AIChatbot: React.FC = () => {
     if (isPanelOpen) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [chatMessages, isTyping, isPanelOpen]);
+  }, [chatMessages, isTyping, isPanelOpen, streamingText]);
 
   // Handle auto-triggered pending action when user clicks an option on NoteCard
   useEffect(() => {
@@ -72,20 +79,25 @@ export const AIChatbot: React.FC = () => {
     setIsTyping(true);
 
     try {
-      // Prepare conversation history for Gemini
-      const recentHistory = chatMessages.slice(-6).map((m) => ({
-        role: m.role,
-        content: m.content
-      }));
-      recentHistory.push({ role: 'user', content: text });
+      if (FEATURE_FLAGS.CHATBOT_AI) {
+        // === NEW MODULAR PATH: useChatbot → chatService → ChatAIGateway → Provider ===
+        await chatbot.sendMessage(text);
+      } else {
+        // === LEGACY PATH: Direct geminiService (rollback-safe) ===
+        const recentHistory = chatMessages.slice(-6).map((m) => ({
+          role: m.role,
+          content: m.content
+        }));
+        recentHistory.push({ role: 'user', content: text });
 
-      const aiReply = await geminiService.chatWithGemini(recentHistory, activeNoteText);
+        const aiReply = await geminiService.chatWithGemini(recentHistory, activeNoteText);
 
-      addChatMessage({
-        role: 'assistant',
-        content: aiReply,
-        type: 'text'
-      });
+        addChatMessage({
+          role: 'assistant',
+          content: aiReply,
+          type: 'text'
+        });
+      }
     } catch (err: any) {
       addChatMessage({
         role: 'assistant',
@@ -418,13 +430,67 @@ export const AIChatbot: React.FC = () => {
                   );
                 })}
 
+                {/* Streaming Text Display (modular chatbot) */}
+                {streamingText && streamingText !== '⏳' && FEATURE_FLAGS.CHATBOT_AI && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex gap-2.5 justify-start"
+                  >
+                    <div className="w-7 h-7 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0 mt-0.5">
+                      <Bot className="w-4 h-4 animate-pulse" />
+                    </div>
+                    <div className="max-w-[85%] space-y-2">
+                      <div className="p-3.5 rounded-2xl text-xs leading-relaxed bg-surface border border-border/80 text-primary rounded-bl-none shadow-xs">
+                        <div className="whitespace-pre-wrap">{streamingText}</div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
                 {/* Typing Indicator */}
-                {isTyping && (
+                {isTyping && !streamingText && (
                   <div className="flex items-center gap-2 text-xs text-primary/50 font-medium pl-1 animate-pulse">
                     <div className="w-6 h-6 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
                       <Bot className="w-3.5 h-3.5 animate-spin" />
                     </div>
                     <span>AI Helper is typing...</span>
+                  </div>
+                )}
+
+                {/* Stop / Retry / Regenerate Controls */}
+                {FEATURE_FLAGS.CHATBOT_AI && (
+                  <div className="flex items-center gap-1.5 pl-9">
+                    {(isTyping || streamingText) && (
+                      <button
+                        onClick={() => { chatbot.stopGeneration(); setIsTyping(false); }}
+                        className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-danger/80 hover:text-danger bg-danger/5 hover:bg-danger/10 border border-danger/20 rounded-lg transition-all cursor-pointer"
+                        title="Stop generation"
+                      >
+                        <Square className="w-3 h-3" />
+                        Stop
+                      </button>
+                    )}
+                    {!isTyping && !streamingText && chatMessages.length > 1 && (
+                      <>
+                        <button
+                          onClick={() => { setIsTyping(true); chatbot.retryLast().finally(() => setIsTyping(false)); }}
+                          className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-primary/50 hover:text-primary bg-primary/5 hover:bg-primary/10 border border-border/60 rounded-lg transition-all cursor-pointer"
+                          title="Retry last message"
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          Retry
+                        </button>
+                        <button
+                          onClick={() => { setIsTyping(true); chatbot.regenerateLast().finally(() => setIsTyping(false)); }}
+                          className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-primary/50 hover:text-primary bg-primary/5 hover:bg-primary/10 border border-border/60 rounded-lg transition-all cursor-pointer"
+                          title="Regenerate response"
+                        >
+                          <RefreshCw className="w-3 h-3" />
+                          Regenerate
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
 

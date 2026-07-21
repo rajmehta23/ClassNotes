@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutGrid, BookOpen, Calendar, Megaphone, Award, Settings, Shield, 
   Menu, X, ChevronLeft, ChevronRight, User, LogOut, Bell, Upload, Loader2,
-  Inbox, CalendarCheck
+  Inbox, CalendarCheck, FileText
 } from 'lucide-react';
 import { useAuthStore } from '@/features/auth/useAuthStore';
 import { useNotificationStore } from '@/features/notifications/useNotificationStore';
@@ -158,6 +158,7 @@ export const RootLayout: React.FC = () => {
     { label: 'Dashboard', path: '/', icon: LayoutGrid },
     { label: 'Notes', path: '/notes', icon: BookOpen },
     { label: 'Attendance', path: '/attendance', icon: CalendarCheck },
+    { label: 'Assignments', path: '/assignments', icon: FileText },
     { label: 'Note Requests', path: '/requests', icon: Inbox },
     { label: 'Calendar', path: '/calendar', icon: Calendar },
     { label: 'Announcements', path: '/announcements', icon: Megaphone },

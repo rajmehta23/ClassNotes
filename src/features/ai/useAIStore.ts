@@ -24,6 +24,7 @@ interface AIState {
   selectedText: string;
   chatMessages: ChatMessage[];
   pendingAction: AIAction | null;
+  streamingText: string;
 
   setActiveNote: (note: Note | null, preExtractedText?: string) => Promise<void>;
   setIsPanelOpen: (isOpen: boolean) => void;
@@ -35,6 +36,8 @@ interface AIState {
   clearPendingAction: () => void;
   addChatMessage: (msg: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
   clearChat: () => void;
+  setStreamingText: (text: string) => void;
+  removeLastAssistantMessage: () => void;
 }
 
 const INITIAL_WELCOME_MESSAGE: ChatMessage = {
@@ -53,6 +56,7 @@ export const useAIStore = create<AIState>((set) => ({
   selectedText: '',
   chatMessages: [INITIAL_WELCOME_MESSAGE],
   pendingAction: null,
+  streamingText: '',
 
   setActiveNote: async (note: Note | null, preExtractedText?: string) => {
     if (!note) {
@@ -105,5 +109,19 @@ export const useAIStore = create<AIState>((set) => ({
     set((state) => ({ chatMessages: [...state.chatMessages, newMsg] }));
   },
 
-  clearChat: () => set({ chatMessages: [INITIAL_WELCOME_MESSAGE] })
+  clearChat: () => set({ chatMessages: [INITIAL_WELCOME_MESSAGE], streamingText: '' }),
+
+  setStreamingText: (text: string) => set({ streamingText: text }),
+
+  removeLastAssistantMessage: () =>
+    set((state) => {
+      const msgs = [...state.chatMessages];
+      for (let i = msgs.length - 1; i >= 0; i--) {
+        if (msgs[i].role === 'assistant') {
+          msgs.splice(i, 1);
+          break;
+        }
+      }
+      return { chatMessages: msgs };
+    }),
 }));

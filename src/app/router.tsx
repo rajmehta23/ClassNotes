@@ -12,12 +12,15 @@ const Register = lazy(() => import('@/pages/Register'));
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
 const Notes = lazy(() => import('@/pages/Notes'));
 const AttendanceModule = lazy(() => import('@/modules/attendance/AttendanceModule'));
+const AssignmentModule = lazy(() => import('@/modules/assignments/AssignmentModule'));
 const Calendar = lazy(() => import('@/pages/Calendar'));
 const Announcements = lazy(() => import('@/pages/Announcements'));
 const Rewards = lazy(() => import('@/pages/Rewards'));
 const Settings = lazy(() => import('@/pages/Settings'));
 const Admin = lazy(() => import('@/pages/Admin'));
 const NoteRequests = lazy(() => import('@/pages/NoteRequests'));
+const AITutorPlaceholder = lazy(() => import('@/modules/ai-learning/pages/AITutorPlaceholder'));
+const AIEssayPlaceholder = lazy(() => import('@/modules/ai-assessment/pages/AIEssayPlaceholder'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Suspense Wrapper component
@@ -60,6 +63,10 @@ export const router = createBrowserRouter([
         element: <AttendanceModule />,
       },
       {
+        path: 'assignments',
+        element: <AssignmentModule />,
+      },
+      {
         path: 'requests',
         element: <NoteRequests />,
       },
@@ -82,6 +89,14 @@ export const router = createBrowserRouter([
       {
         path: 'admin',
         element: <ProtectedRoute allowedRoles={['admin']}><Admin /></ProtectedRoute>,
+      },
+      {
+        path: 'ai-tutor',
+        element: <AITutorPlaceholder />,
+      },
+      {
+        path: 'ai-essay',
+        element: <AIEssayPlaceholder />,
       },
       {
         path: '*',

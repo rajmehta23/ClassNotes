@@ -3,6 +3,7 @@ import type { Note } from '@/types/database';
 import { X, ExternalLink, AlertCircle, FileText, Sparkles, HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAIStore } from '@/features/ai/useAIStore';
+import { StudyToolsPanel } from '@/modules/ai-learning/components/StudyToolsPanel';
 
 interface DocumentViewerProps {
   note: Note | null;
@@ -306,6 +307,11 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
                   <X size={14} />
                 </button>
               </div>
+            </div>
+
+            {/* Study Tools Bar */}
+            <div className="px-5 py-2 bg-surface/50 border-b border-border/40 shrink-0">
+              <StudyToolsPanel note={note} variant="bar" />
             </div>
 
             {/* Document display section */}

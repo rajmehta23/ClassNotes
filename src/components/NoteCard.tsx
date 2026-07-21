@@ -7,6 +7,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatFileSize, formatRelativeTime } from '@/utils/format';
 import { useAIStore } from '@/features/ai/useAIStore';
+import { StudyToolsPanel } from '@/modules/ai-learning/components/StudyToolsPanel';
 
 const getResourceDetails = (urlStr: string) => {
   if (!urlStr) return null;
@@ -336,6 +337,8 @@ export const NoteCard: React.FC<NoteCardProps> = React.memo(({
           <p className="text-[11px] text-primary/60 line-clamp-2 leading-relaxed mt-1">
             {note.description}
           </p>
+
+          <StudyToolsPanel note={note} />
           {resourceDetails && (
             <div className="pt-2 flex items-center select-none">
               <motion.a

@@ -9,7 +9,7 @@ import { formatRelativeTime } from '@/utils/format';
 import UploadModal from '@/components/UploadModal';
 import RequestNotesModal from '@/components/RequestNotesModal';
 import { 
-  Plus, Sparkles, ThumbsUp, CheckCircle, Clock
+  Plus, Sparkles, ThumbsUp, CheckCircle, Clock, Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -236,18 +236,34 @@ export const NoteRequests: React.FC = () => {
                       📘 {request.subject}
                     </span>
                     
-                    {/* Status Badge */}
-                    {request.status === 'fulfilled' ? (
-                      <span className="inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider text-success bg-success/10 border border-success/20 px-2.5 py-0.5 rounded-full font-bold">
-                        <CheckCircle size={10} />
-                        Fulfilled
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider text-warning bg-warning/10 border border-warning/20 px-2.5 py-0.5 rounded-full font-bold animate-pulse">
-                        <Clock size={10} />
-                        Waiting
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      {request.status === 'fulfilled' ? (
+                        <span className="inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider text-success bg-success/10 border border-success/20 px-2.5 py-0.5 rounded-full font-bold">
+                          <CheckCircle size={10} />
+                          Fulfilled
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider text-warning bg-warning/10 border border-warning/20 px-2.5 py-0.5 rounded-full font-bold animate-pulse">
+                          <Clock size={10} />
+                          Waiting
+                        </span>
+                      )}
+
+                      {user?.role === 'admin' && (
+                        <button
+                          onClick={async () => {
+                            if (window.confirm(`Delete request for "${request.topic}"?`)) {
+                              await noteRequestsService.deleteRequest(request.requestId);
+                              setRequests((prev) => prev.filter((r) => r.requestId !== request.requestId));
+                            }
+                          }}
+                          className="p-1 text-primary/40 hover:text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
+                          title="Delete Note Request (Admin Only)"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div>
