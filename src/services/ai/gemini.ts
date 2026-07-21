@@ -13,9 +13,12 @@ const REQUEST_TIMEOUT_MS = 30000; // 30 seconds
 const MAX_NOTE_LENGTH = 150000; // ~150k chars safety cutoff
 
 export class GeminiError extends Error {
-  constructor(message: string, public code?: string) {
+  code?: string;
+
+  constructor(message: string, code?: string) {
     super(message);
     this.name = 'GeminiError';
+    this.code = code;
   }
 }
 
