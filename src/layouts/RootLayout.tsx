@@ -14,6 +14,9 @@ import LoadingPage from '@/components/LoadingPage';
 import { getUserAvatarUrl } from '@/utils/avatar';
 import { storageService } from '@/services/storage';
 
+const AIChatbot = React.lazy(() => import('@/components/ai/AIChatbot'));
+const VoiceAssistant = React.lazy(() => import('@/components/voice/VoiceAssistant'));
+
 export const RootLayout: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -839,6 +842,10 @@ export const RootLayout: React.FC = () => {
       </div>
       <UploadModal isOpen={isGlobalUploadOpen} onClose={() => setIsGlobalUploadOpen(false)} />
       <RequestNotesModal isOpen={isGlobalRequestOpen} onClose={() => setIsGlobalRequestOpen(false)} />
+      <Suspense fallback={null}>
+        <AIChatbot />
+        <VoiceAssistant onTriggerUpload={() => setIsGlobalUploadOpen(true)} />
+      </Suspense>
     </div>
   );
 };

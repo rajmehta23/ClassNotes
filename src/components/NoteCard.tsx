@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import type { Note } from '@/types/database';
 import { 
   BookOpen, Star, Download, Bookmark, BookmarkCheck, Eye, 
-  User, Award, Loader2, Flag, Play, ExternalLink, Globe
+  User, Award, Loader2, Flag, Play, ExternalLink, Globe, Sparkles, FileText, HelpCircle
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { formatFileSize, formatRelativeTime } from '@/utils/format';
+import { useAIStore } from '@/features/ai/useAIStore';
 
 const getResourceDetails = (urlStr: string) => {
   if (!urlStr) return null;
@@ -109,6 +110,18 @@ export const NoteCard: React.FC<NoteCardProps> = React.memo(({
   const [isReporting, setIsReporting] = useState(false);
   const [showReportConfirm, setShowReportConfirm] = useState(false);
   const [hoveredStar, setHoveredStar] = useState<number | null>(null);
+  const [isAiMenuOpen, setIsAiMenuOpen] = useState(false);
+  const aiMenuRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (aiMenuRef.current && !aiMenuRef.current.contains(event.target as Node)) {
+        setIsAiMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Spotlight Coordinates Tracking
   const [coords, setCoords] = useState({ x: 0, y: 0 });
@@ -213,30 +226,92 @@ export const NoteCard: React.FC<NoteCardProps> = React.memo(({
           )}
         </div>
 
-        {/* Category Badge & Bookmark Icon */}
+        {/* Category Badge & Bookmark / AI Icons */}
         <div className="flex justify-between items-center">
           <span className="text-[9px] font-mono font-bold uppercase tracking-wider bg-primary/5 border border-border/50 px-2 py-0.5 rounded text-primary/65 select-none">
             {note.category}
           </span>
           
-          <button
-            onClick={handleToggleBookmark}
-            disabled={isBookmarking}
-            className={`p-1.5 rounded-full border transition-all ${
-              isBookmarked 
-                ? 'bg-accent/10 border-accent/25 text-accent hover:bg-accent/15' 
-                : 'border-border/60 text-primary/45 hover:text-primary hover:bg-primary/5'
-            } disabled:opacity-50 cursor-pointer active-scale`}
-            title={isBookmarked ? 'Remove bookmark' : 'Bookmark note'}
-          >
-            {isBookmarking ? (
-              <Loader2 size={12} className="animate-spin" />
-            ) : isBookmarked ? (
-              <BookmarkCheck size={12} className="fill-accent text-accent" />
-            ) : (
-              <Bookmark size={12} />
-            )}
-          </button>
+          <div className="flex items-center gap-1.5">
+            {/* AI Helper 3-Option Popover */}
+            <div className="relative" ref={aiMenuRef}>
+              <button
+                type="button"
+                onClick={() => setIsAiMenuOpen(!isAiMenuOpen)}
+                className="p-1.5 rounded-full border border-accent/30 bg-accent/10 text-accent hover:bg-accent hover:text-white transition-all cursor-pointer active-scale"
+                title="AI Helper Options (Summarize, Ask, Quiz)"
+              >
+                <Sparkles size={12} />
+              </button>
+
+              <AnimatePresence>
+                {isAiMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 6 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 6 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-8 w-44 bg-surface border border-border rounded-xl shadow-luxury z-30 overflow-hidden text-xs p-1 space-y-0.5"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAiMenuOpen(false);
+                        useAIStore.getState().triggerNoteAction(note, 'summary');
+                      }}
+                      className="w-full flex items-center gap-2 px-2.5 py-2 hover:bg-accent/10 hover:text-accent rounded-lg text-[11px] font-semibold text-primary/80 transition-colors cursor-pointer text-left"
+                    >
+                      <FileText size={13} className="text-accent shrink-0" />
+                      <span>Summarize Note</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAiMenuOpen(false);
+                        useAIStore.getState().triggerNoteAction(note, 'ask');
+                      }}
+                      className="w-full flex items-center gap-2 px-2.5 py-2 hover:bg-accent/10 hover:text-accent rounded-lg text-[11px] font-semibold text-primary/80 transition-colors cursor-pointer text-left"
+                    >
+                      <HelpCircle size={13} className="text-accent shrink-0" />
+                      <span>Ask Questions</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAiMenuOpen(false);
+                        useAIStore.getState().triggerNoteAction(note, 'quiz');
+                      }}
+                      className="w-full flex items-center gap-2 px-2.5 py-2 hover:bg-accent/10 hover:text-accent rounded-lg text-[11px] font-semibold text-primary/80 transition-colors cursor-pointer text-left"
+                    >
+                      <Sparkles size={13} className="text-accent shrink-0" />
+                      <span>Create 5 MCQs Quiz</span>
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <button
+              onClick={handleToggleBookmark}
+              disabled={isBookmarking}
+              className={`p-1.5 rounded-full border transition-all ${
+                isBookmarked 
+                  ? 'bg-accent/10 border-accent/25 text-accent hover:bg-accent/15' 
+                  : 'border-border/60 text-primary/45 hover:text-primary hover:bg-primary/5'
+              } disabled:opacity-50 cursor-pointer active-scale`}
+              title={isBookmarked ? 'Remove bookmark' : 'Bookmark note'}
+            >
+              {isBookmarking ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : isBookmarked ? (
+                <BookmarkCheck size={12} className="fill-accent text-accent" />
+              ) : (
+                <Bookmark size={12} />
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Note Details */}

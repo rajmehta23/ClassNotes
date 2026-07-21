@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { Note } from '@/types/database';
-import { X, ExternalLink, AlertCircle, FileText } from 'lucide-react';
+import { X, ExternalLink, AlertCircle, FileText, Sparkles, HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAIStore } from '@/features/ai/useAIStore';
 
 interface DocumentViewerProps {
   note: Note | null;
@@ -14,8 +15,35 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
   isOpen,
   onClose
 }) => {
-  const [safeFileUrl, setSafeFileUrl] = React.useState<string>('');
-  const [iframeError, setIframeError] = React.useState(false);
+  const [safeFileUrl, setSafeFileUrl] = useState<string>('');
+  const [iframeError, setIframeError] = useState(false);
+  const [isAiMenuOpen, setIsAiMenuOpen] = useState(false);
+  const aiMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (aiMenuRef.current && !aiMenuRef.current.contains(event.target as Node)) {
+        setIsAiMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Set active note in AI Store when document viewer opens
+  React.useEffect(() => {
+    if (isOpen && note) {
+      useAIStore.getState().setActiveNote(note);
+    }
+  }, [isOpen, note]);
+
+  // Capture user text selections inside document viewer
+  const handleMouseUp = () => {
+    const selection = window.getSelection();
+    if (selection && selection.toString().trim().length > 0) {
+      useAIStore.getState().setSelectedText(selection.toString().trim());
+    }
+  };
 
   React.useEffect(() => {
     if (!note) return;
@@ -128,7 +156,10 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
       }
 
       return (
-        <div className="w-full h-full bg-background border border-border p-6 rounded overflow-auto font-mono text-sm leading-relaxed text-primary/80 select-text whitespace-pre-wrap">
+        <div 
+          onMouseUp={handleMouseUp}
+          className="w-full h-full bg-background border border-border p-6 rounded overflow-auto font-mono text-sm leading-relaxed text-primary/80 select-text whitespace-pre-wrap"
+        >
           {textContent}
         </div>
       );
@@ -197,6 +228,67 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
 
               {/* Header actions */}
               <div className="flex items-center gap-2">
+                {/* AI Assistant Quick Trigger 3-Option Popover */}
+                <div className="relative" ref={aiMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsAiMenuOpen(!isAiMenuOpen)}
+                    className="px-2.5 py-1.5 bg-accent/10 border border-accent/30 text-accent hover:bg-accent hover:text-white rounded-md text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active-scale"
+                    title="AI Helper Options"
+                  >
+                    <Sparkles size={13} />
+                    <span>AI Helper</span>
+                  </button>
+
+                  <AnimatePresence>
+                    {isAiMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 6 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 6 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 top-9 w-44 bg-surface border border-border rounded-xl shadow-luxury z-30 overflow-hidden text-xs p-1 space-y-0.5"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsAiMenuOpen(false);
+                            if (note) useAIStore.getState().triggerNoteAction(note, 'summary');
+                          }}
+                          className="w-full flex items-center gap-2 px-2.5 py-2 hover:bg-accent/10 hover:text-accent rounded-lg text-[11px] font-semibold text-primary/80 transition-colors cursor-pointer text-left"
+                        >
+                          <FileText size={13} className="text-accent shrink-0" />
+                          <span>Summarize Note</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsAiMenuOpen(false);
+                            if (note) useAIStore.getState().triggerNoteAction(note, 'ask');
+                          }}
+                          className="w-full flex items-center gap-2 px-2.5 py-2 hover:bg-accent/10 hover:text-accent rounded-lg text-[11px] font-semibold text-primary/80 transition-colors cursor-pointer text-left"
+                        >
+                          <HelpCircle size={13} className="text-accent shrink-0" />
+                          <span>Ask Questions</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsAiMenuOpen(false);
+                            if (note) useAIStore.getState().triggerNoteAction(note, 'quiz');
+                          }}
+                          className="w-full flex items-center gap-2 px-2.5 py-2 hover:bg-accent/10 hover:text-accent rounded-lg text-[11px] font-semibold text-primary/80 transition-colors cursor-pointer text-left"
+                        >
+                          <Sparkles size={13} className="text-accent shrink-0" />
+                          <span>Create 5 MCQs Quiz</span>
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
                 <a
                   href={safeFileUrl}
                   target="_blank"
@@ -228,3 +320,4 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
 };
 
 export default DocumentViewer;
+
